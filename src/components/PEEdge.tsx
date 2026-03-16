@@ -26,7 +26,7 @@ function PEEdge({
   let effectiveWidth: number
 
   if (!selectedId) {
-    stroke = 'rgba(100,100,200,0.3)'
+    stroke = 'rgba(100,100,200,0.7)'
     effectiveWidth = strokeWidth
   } else if (!highlightedEdgeIds.has(id)) {
     stroke = 'rgba(255,255,255,0.03)'
@@ -40,7 +40,7 @@ function PEEdge({
     stroke = 'rgba(52,211,153,0.75)'
     effectiveWidth = strokeWidth
   } else {
-    stroke = 'rgba(100,100,200,0.3)'
+    stroke = 'rgba(100,100,200,0.7)'
     effectiveWidth = strokeWidth
   }
 

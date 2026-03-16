@@ -29,9 +29,12 @@ const TRANSITION = 'transform 0.35s cubic-bezier(0.4,0,0.2,1)'
 interface Props {
   graphState: GraphState
   onReload: () => void
+  availableFiles?: string[]
+  activeFile?: string | null
+  onSelectFile?: (name: string) => void
 }
 
-export default function PEGraph({ graphState, onReload }: Props) {
+export default function PEGraph({ graphState, onReload, availableFiles, activeFile, onSelectFile }: Props) {
   const [nodes, setNodes, onNodesChange] = useNodesState(graphState.nodes)
   const [edges, , onEdgesChange] = useEdgesState(graphState.edges)
   const [selectedNode, setSelectedNode] = useState<Node | null>(null)
@@ -219,6 +222,34 @@ export default function PEGraph({ graphState, onReload }: Props) {
           gap: 6,
           zIndex: 10,
         }}>
+          {availableFiles && availableFiles.length > 1 && onSelectFile ? (
+            <select
+              value={activeFile ?? ''}
+              onChange={(e) => onSelectFile(e.target.value)}
+              style={{
+                background: '#4f46e5',
+                border: '1px solid #6366f1',
+                color: '#fff',
+                borderRadius: 6,
+                padding: '6px 14px',
+                cursor: 'pointer',
+                fontSize: 12,
+                fontWeight: 700,
+                letterSpacing: '0.02em',
+                boxShadow: '0 2px 8px rgba(79,70,229,0.45)',
+                appearance: 'none',
+                WebkitAppearance: 'none',
+                paddingRight: 28,
+                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'right 8px center',
+              }}
+            >
+              {availableFiles.map(f => (
+                <option key={f} value={f}>{f.replace(/\.txt$/, '')}</option>
+              ))}
+            </select>
+          ) : null}
           <button
             onClick={onReload}
             style={{

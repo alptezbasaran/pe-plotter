@@ -65,7 +65,7 @@ export function computeLayout(data: ParsedData): LayoutNode[] {
       const y = yStart + i * COLUMN_HEIGHT
       nodes.push({
         id: pe,
-        label: pe,
+        label: pe.replace('PE_', ''),
         x,
         y,
         isTerminal: terminalNodes.has(pe),

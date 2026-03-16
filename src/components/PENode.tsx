@@ -69,9 +69,9 @@ function PENode({ id, data }: NodeProps) {
 
   const isHighlighted = isSelected || isAncestor || isDescendant
   const t = isHighlighted ? 0 : Math.sqrt((d.traversalCount ?? 1) / (d.maxTraversalCount ?? 1))
-  const padV  = isHighlighted ? 4 : 2 + Math.round(t * 6)
-  const padH  = isHighlighted ? 8 : 5 + Math.round(t * 7)
-  const fSize = isHighlighted ? 11 : 8 + Math.round(t * 5)
+  const padV  = isHighlighted ? 5 : 4 + Math.round(t * 5)
+  const padH  = isHighlighted ? 10 : 8 + Math.round(t * 6)
+  const fSize = isHighlighted ? 13 : 11 + Math.round(t * 4)
 
   return (
     <>

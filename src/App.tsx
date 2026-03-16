@@ -8,18 +8,44 @@ export default function App() {
   const { graphState, loading, error, loadFile } = useGraphData()
   const [showUpload, setShowUpload] = useState(false)
   const [defaultChecked, setDefaultChecked] = useState(false)
+  const [availableFiles, setAvailableFiles] = useState<string[]>([])
+  const [activeFile, setActiveFile] = useState<string | null>(null)
 
-  // Auto-load default Scenario info.txt served as a static asset
+  // Discover available scenario files and auto-load the default
   useEffect(() => {
-    fetch('/Scenario%20info.txt')
-      .then(r => { if (r.ok) return r.text(); throw new Error('no default') })
-      .then(text => {
-        const file = new File([text], 'Scenario info.txt', { type: 'text/plain' })
-        loadFile(file)
+    fetch('/files.json')
+      .then(r => { if (r.ok) return r.json() as Promise<string[]>; throw new Error('no manifest') })
+      .then(files => {
+        setAvailableFiles(files)
+        const defaultFile = files.includes('Scenario info.txt') ? 'Scenario info.txt' : files[0]
+        if (defaultFile) {
+          loadServerFile(defaultFile)
+        }
       })
-      .catch(() => { /* no default file bundled — show upload screen */ })
+      .catch(() => {
+        // Fallback: try loading single default file (e.g. GitHub Pages)
+        fetch('/Scenario%20info.txt')
+          .then(r => { if (r.ok) return r.text(); throw new Error('no default') })
+          .then(text => {
+            const file = new File([text], 'Scenario info.txt', { type: 'text/plain' })
+            loadFile(file)
+            setActiveFile('Scenario info.txt')
+          })
+          .catch(() => { /* no default file — show upload screen */ })
+      })
       .finally(() => setDefaultChecked(true))
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const loadServerFile = (name: string) => {
+    fetch('/' + encodeURIComponent(name))
+      .then(r => { if (r.ok) return r.text(); throw new Error('fetch failed') })
+      .then(text => {
+        const file = new File([text], name, { type: 'text/plain' })
+        setActiveFile(name)
+        setShowUpload(false)
+        loadFile(file)
+      })
+  }
 
   // Show upload screen when: no data yet (and default check done), or user clicked "Load new file"
   const showFileUpload = defaultChecked && (!graphState || showUpload)
@@ -37,6 +63,9 @@ export default function App() {
         <PEGraph
           graphState={graphState}
           onReload={() => setShowUpload(true)}
+          availableFiles={availableFiles}
+          activeFile={activeFile}
+          onSelectFile={loadServerFile}
         />
       ) : null}
 
