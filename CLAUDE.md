@@ -47,11 +47,14 @@ Scenario info.txt
   └─ parseScenarioFile()   src/lib/parser.ts
        └─ computeLayout()  src/lib/layout.ts
             └─ useGraphData()  src/hooks/useGraphData.ts
-                 └─ PEGraph.tsx  (ReactFlow canvas + toolbar)
-                       ├─ PENode.tsx      (custom node renderer)
-                       ├─ PEEdge.tsx      (custom edge renderer)
-                       ├─ NodeDetailPanel.tsx  (right-side detail panel)
-                       └─ InfoPanel.tsx   (stats bar in toolbar)
+                 └─ PEGraph.tsx  (ReactFlowProvider wrapper + inner component)
+                       ├─ PENode.tsx               custom node renderer
+                       ├─ PEEdge.tsx               custom edge renderer
+                       ├─ MarqueeZoomOverlay       Shift+drag rectangle zoom
+                       ├─ NodeDetailPanel.tsx       right-side detail panel
+                       ├─ InfoPanel.tsx             stats bar in toolbar
+                       ├─ TimeAxis.tsx              adaptive time axis overlay
+                       └─ CursorTimeIndicator.tsx   cursor position → time label
 ```
 
 ### Key modules
@@ -77,7 +80,7 @@ Scenario info.txt
 - Returns highlighted edge set + `incomingCount` / `outgoingCount`
 
 **`src/lib/GraphHighlightContext.ts`**
-- React context holding `HighlightState`: selected node, ancestor/descendant sets, edge set, in/out counts
+- React context holding `HighlightState`: selected node, ancestor/descendant sets, edge set, in/out counts, `searchMatchIds`
 - `useHighlight()` hook for consumption in node/edge/panel components
 
 ### Node visual states (PENode.tsx)
@@ -86,6 +89,7 @@ Scenario info.txt
 |---|---|---|---|
 | Idle non-terminal | `#4a90d9` blue | white | default |
 | Idle terminal | `#e05252` red | white | no outgoing edges |
+| Search match | `#0891b2` cyan | white | cyan border + glow; non-matches dim |
 | Ancestor | `#f59e0b` amber | `#1c1917` | leads to selected |
 | Descendant | `#34d399` emerald | `#064e3b` | reachable from selected |
 | Selected | `#f8fafc` near-white | `#1e1e2e` | amber ring + glow |
@@ -107,6 +111,21 @@ Scenario info.txt
 | anything else | `—` | `#6c7086` gray |
 
 Events are grouped into Hardware / Cognitive / Other sections in the detail panel.
+
+### Node search (PEGraph.tsx)
+
+- Search input in the toolbar accepts comma-separated PE numbers (e.g. `1080,1149`)
+- Matching is case-insensitive substring against node labels
+- `searchMatchIds` set is computed in `PEGraphInner` and merged into the `HighlightState` context
+- On Enter: viewport auto-zooms via `fitBounds()` to the bounding box of matched nodes
+- Search border: cyan when matches found, red when no matches, default indigo when empty
+
+### Marquee zoom (PEGraph.tsx → MarqueeZoomOverlay)
+
+- Hold Shift+drag on the canvas to draw a selection rectangle, release to zoom into that area
+- Implemented as a transparent overlay `<div>` sibling to `<ReactFlow>`, toggled via `shiftHeld` state
+- Uses `screenToFlowPosition()` + `fitBounds()` from `useReactFlow()`
+- `PEGraph` is wrapped in `ReactFlowProvider` (exported as `PEGraphWrapper`) so both `MarqueeZoomOverlay` and `PEGraphInner` can access `useReactFlow()`
 
 ## Legacy Python script architecture
 

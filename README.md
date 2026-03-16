@@ -18,6 +18,8 @@ Interactive DAG visualizer for nuclear plant simulator operator scenarios. Reads
 - **Detail panel** — events at a selected node classified as Hardware / Cognitive / Other
 - **Cursor time indicator** — vertical line following the mouse with a live `t = X.X s` label at the time axis
 - **Node hover glow** — white ring on hovered nodes; dimmed nodes temporarily pop into view on hover
+- **Node search** — search bar in the toolbar to find nodes by PE number; supports comma-separated queries (e.g. `1080,1149`). Matching nodes glow cyan, non-matches dim, and the viewport zooms to fit results. Press Enter to search, ✕ to clear.
+- **Marquee zoom** — hold Shift and drag on the canvas to draw a selection rectangle; the viewport zooms to fit that area on release
 
 ---
 

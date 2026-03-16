@@ -16,11 +16,13 @@ interface PENodeData {
 
 function PENode({ id, data }: NodeProps) {
   const d = data as PENodeData
-  const { selectedId, ancestorNodeIds, descendantNodeIds, highlightedNodeIds } = useHighlight()
+  const { selectedId, ancestorNodeIds, descendantNodeIds, highlightedNodeIds, searchMatchIds } = useHighlight()
   const [hovered, setHovered] = useState(false)
 
   const isSelected = selectedId === id
-  const isDimmed = !!selectedId && !highlightedNodeIds.has(id)
+  const isSearchMatch = searchMatchIds.size > 0 && searchMatchIds.has(id)
+  const isSearchDimmed = searchMatchIds.size > 0 && !isSearchMatch && !selectedId
+  const isDimmed = (!!selectedId && !highlightedNodeIds.has(id)) || isSearchDimmed
   const isAncestor = !isSelected && ancestorNodeIds.has(id)
   const isDescendant = !isSelected && descendantNodeIds.has(id)
   const isBranch = !isSelected && !isAncestor && !isDescendant && d.outDegree > 1
@@ -32,11 +34,17 @@ function PENode({ id, data }: NodeProps) {
   const hoverRing = hovered && !isSelected ? '0 0 0 2px rgba(255,255,255,0.55)' : undefined
   let opacity: number
 
-  if (isDimmed) {
+  if (isDimmed && !isSearchMatch) {
     bg = '#1e1e2e'
     color = '#45475a'
     border = '1px solid #313244'
     opacity = 0.15
+  } else if (isSearchMatch && !isSelected && !isAncestor && !isDescendant) {
+    bg = '#0891b2'
+    color = '#fff'
+    border = '2px solid #22d3ee'
+    boxShadow = '0 0 12px rgba(34,211,238,0.6)'
+    opacity = 1
   } else if (isSelected) {
     bg = '#f8fafc'
     color = '#1e1e2e'

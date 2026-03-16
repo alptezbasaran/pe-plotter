@@ -69,5 +69,6 @@ export function computeHighlight(selectedId: string, edges: Edge[]): HighlightSt
     descendantNodeIds,
     incomingCount,
     outgoingCount,
+    searchMatchIds: new Set<string>(),
   }
 }

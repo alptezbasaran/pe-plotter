@@ -14,6 +14,8 @@ export interface HighlightState {
   incomingCount: number
   /** Number of direct successors of selectedId */
   outgoingCount: number
+  /** Nodes matching the current search query */
+  searchMatchIds: Set<string>
 }
 
 export const IDLE: HighlightState = {
@@ -24,6 +26,7 @@ export const IDLE: HighlightState = {
   descendantNodeIds: new Set(),
   incomingCount: 0,
   outgoingCount: 0,
+  searchMatchIds: new Set(),
 }
 
 export const GraphHighlightContext = createContext<HighlightState>(IDLE)
