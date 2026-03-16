@@ -17,6 +17,7 @@ import PEEdge from './PEEdge'
 import NodeDetailPanel from './NodeDetailPanel'
 import InfoPanel from './InfoPanel'
 import TimeAxis from './TimeAxis'
+import CursorTimeIndicator from './CursorTimeIndicator'
 
 const nodeTypes = { peNode: PENode }
 const edgeTypes = { peEdge: PEEdge }
@@ -33,6 +34,7 @@ export default function PEGraph({ graphState, onReload }: Props) {
   const [nodes, setNodes, onNodesChange] = useNodesState(graphState.nodes)
   const [edges, , onEdgesChange] = useEdgesState(graphState.edges)
   const [selectedNode, setSelectedNode] = useState<Node | null>(null)
+  const [mouseX, setMouseX] = useState<number | null>(null)
 
   const originalPositions = useRef<Map<string, { x: number; y: number }>>(new Map())
 
@@ -124,6 +126,11 @@ export default function PEGraph({ graphState, onReload }: Props) {
           fitView
           onNodeClick={onNodeClick}
           onPaneClick={onPaneClick}
+          onMouseMove={(e) => {
+            const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+            setMouseX(e.clientX - rect.left)
+          }}
+          onMouseLeave={() => setMouseX(null)}
           style={{ background: '#11111b' }}
         >
           <Background color="#313244" gap={40} />
@@ -138,6 +145,7 @@ export default function PEGraph({ graphState, onReload }: Props) {
             style={{ background: '#1e1e2e', bottom: 32 }}
           />
           <TimeAxis minTime={minTime} maxTime={maxTime} />
+          <CursorTimeIndicator mouseX={mouseX} minTime={minTime} maxTime={maxTime} />
         </ReactFlow>
 
         {/* Toolbar */}

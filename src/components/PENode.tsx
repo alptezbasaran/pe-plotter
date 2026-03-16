@@ -1,4 +1,4 @@
-import { memo } from 'react'
+import { memo, useState } from 'react'
 import { Handle, Position } from '@xyflow/react'
 import type { NodeProps } from '@xyflow/react'
 import { useHighlight } from '../lib/GraphHighlightContext'
@@ -17,6 +17,7 @@ interface PENodeData {
 function PENode({ id, data }: NodeProps) {
   const d = data as PENodeData
   const { selectedId, ancestorNodeIds, descendantNodeIds, highlightedNodeIds } = useHighlight()
+  const [hovered, setHovered] = useState(false)
 
   const isSelected = selectedId === id
   const isDimmed = !!selectedId && !highlightedNodeIds.has(id)
@@ -28,6 +29,7 @@ function PENode({ id, data }: NodeProps) {
   let color: string
   let border: string
   let boxShadow: string | undefined
+  const hoverRing = hovered && !isSelected ? '0 0 0 2px rgba(255,255,255,0.55)' : undefined
   let opacity: number
 
   if (isDimmed) {
@@ -75,6 +77,8 @@ function PENode({ id, data }: NodeProps) {
     <>
       <Handle type="target" position={Position.Left} style={{ opacity: 0 }} />
       <div
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
         style={{
           background: bg,
           border,
@@ -85,9 +89,9 @@ function PENode({ id, data }: NodeProps) {
           fontWeight: 600,
           whiteSpace: 'nowrap',
           cursor: 'pointer',
-          opacity,
-          transition: 'opacity 0.15s, background 0.15s',
-          boxShadow,
+          opacity: isDimmed && hovered ? 0.6 : opacity,
+          transition: 'opacity 0.15s, background 0.15s, box-shadow 0.1s',
+          boxShadow: boxShadow ?? hoverRing,
           textAlign: 'center',
         }}
       >

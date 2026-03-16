@@ -29,6 +29,8 @@ jobs:
 
       - run: npm install
       - run: npm run build
+        env:
+          VITE_BASE_URL: /pe-plotter/
 
       - uses: actions/configure-pages@v4
 

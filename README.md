@@ -16,6 +16,8 @@ Interactive DAG visualizer for nuclear plant simulator operator scenarios. Reads
 - **Sequence linearization** — selected chain animates into a horizontal line sorted by time
 - **Time axis** — persistent axis bar at the bottom, ticks adapt to zoom/pan level
 - **Detail panel** — events at a selected node classified as Hardware / Cognitive / Other
+- **Cursor time indicator** — vertical line following the mouse with a live `t = X.X s` label at the time axis
+- **Node hover glow** — white ring on hovered nodes; dimmed nodes temporarily pop into view on hover
 
 ---
 
@@ -62,7 +64,8 @@ Scenario info.txt
                  └─ PEGraph.tsx
                        ├─ PENode.tsx          node renderer (size ∝ traversal count)
                        ├─ PEEdge.tsx          edge renderer (width ∝ traversal count)
-                       ├─ TimeAxis.tsx        adaptive time axis overlay
+                       ├─ TimeAxis.tsx            adaptive time axis overlay
+                       ├─ CursorTimeIndicator.tsx cursor position → time label
                        ├─ NodeDetailPanel.tsx right-side detail panel
                        └─ InfoPanel.tsx       stats bar
 ```
