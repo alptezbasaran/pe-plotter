@@ -1,4 +1,6 @@
 import { useViewport } from '@xyflow/react'
+import type { CompressedSegment } from '../lib/types'
+import { compressedXToTime } from '../lib/layout'
 
 const CANVAS_WIDTH = 16000
 
@@ -6,16 +8,23 @@ interface Props {
   mouseX: number | null
   minTime: number
   maxTime: number
+  compressed?: boolean
+  segments?: CompressedSegment[] | null
 }
 
-export default function CursorTimeIndicator({ mouseX, minTime, maxTime }: Props) {
+export default function CursorTimeIndicator({ mouseX, minTime, maxTime, compressed, segments }: Props) {
   const { x: panX, zoom } = useViewport()
 
   if (mouseX === null) return null
 
   const timeRange = maxTime - minTime || 1
   const canvasX = (mouseX - panX) / zoom
-  const t = minTime + (canvasX / CANVAS_WIDTH) * timeRange
+  let t: number
+  if (compressed && segments) {
+    t = compressedXToTime(canvasX, segments)
+  } else {
+    t = minTime + (canvasX / CANVAS_WIDTH) * timeRange
+  }
 
   if (t < minTime - timeRange * 0.05 || t > maxTime + timeRange * 0.05) return null
 

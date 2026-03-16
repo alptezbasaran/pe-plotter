@@ -12,6 +12,7 @@ import '@xyflow/react/dist/style.css'
 import type { GraphState } from '../hooks/useGraphData'
 import { GraphHighlightContext, IDLE } from '../lib/GraphHighlightContext'
 import { computeHighlight } from '../lib/highlight'
+import { buildSegments, timeToCompressedX } from '../lib/layout'
 import PENode from './PENode'
 import PEEdge from './PEEdge'
 import NodeDetailPanel from './NodeDetailPanel'
@@ -35,17 +36,46 @@ export default function PEGraph({ graphState, onReload }: Props) {
   const [edges, , onEdgesChange] = useEdgesState(graphState.edges)
   const [selectedNode, setSelectedNode] = useState<Node | null>(null)
   const [mouseX, setMouseX] = useState<number | null>(null)
+  const [collapsedGaps, setCollapsedGaps] = useState<Set<number>>(new Set())
 
   const originalPositions = useRef<Map<string, { x: number; y: number }>>(new Map())
 
-  // Capture original positions whenever graphState changes
+  // Capture original positions whenever graphState changes; also reset collapsed state
   useEffect(() => {
     const map = new Map<string, { x: number; y: number }>()
     for (const n of graphState.nodes) {
       map.set(n.id, { x: n.position.x, y: n.position.y })
     }
     originalPositions.current = map
+    setCollapsedGaps(new Set())
   }, [graphState])
+
+  // Compute segments from currently collapsed gaps
+  const segments = useMemo(() => {
+    const { gapData } = graphState
+    if (!gapData || collapsedGaps.size === 0) return null
+    return buildSegments(gapData.intervals, collapsedGaps)
+  }, [graphState.gapData, collapsedGaps]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Apply/restore compressed positions when collapsed gaps change
+  useEffect(() => {
+    const { gapData } = graphState
+    if (!gapData) return
+
+    if (collapsedGaps.size > 0 && segments) {
+      setNodes(prev => prev.map(n => {
+        const cx = timeToCompressedX((n.data as { time: number }).time, segments)
+        const orig = originalPositions.current.get(n.id)
+        return { ...n, position: { x: cx, y: orig?.y ?? n.position.y }, style: { ...n.style, transition: TRANSITION } }
+      }))
+    } else {
+      setNodes(prev => prev.map(n => {
+        const orig = originalPositions.current.get(n.id)
+        if (!orig) return n
+        return { ...n, position: orig, style: { ...n.style, transition: TRANSITION } }
+      }))
+    }
+  }, [collapsedGaps, segments]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const highlight = useMemo(
     () => selectedNode ? computeHighlight(selectedNode.id, edges) : IDLE,
@@ -55,11 +85,19 @@ export default function PEGraph({ graphState, onReload }: Props) {
   // Linearize on select, restore on deselect
   useEffect(() => {
     if (!selectedNode) {
-      setNodes(prev => prev.map(n => {
-        const orig = originalPositions.current.get(n.id)
-        if (!orig) return n
-        return { ...n, position: orig, style: { ...n.style, transition: TRANSITION } }
-      }))
+      if (collapsedGaps.size > 0 && segments) {
+        setNodes(prev => prev.map(n => {
+          const cx = timeToCompressedX((n.data as { time: number }).time, segments)
+          const orig = originalPositions.current.get(n.id)
+          return { ...n, position: { x: cx, y: orig?.y ?? n.position.y }, style: { ...n.style, transition: TRANSITION } }
+        }))
+      } else {
+        setNodes(prev => prev.map(n => {
+          const orig = originalPositions.current.get(n.id)
+          if (!orig) return n
+          return { ...n, position: orig, style: { ...n.style, transition: TRANSITION } }
+        }))
+      }
       return
     }
 
@@ -103,12 +141,23 @@ export default function PEGraph({ graphState, onReload }: Props) {
     setSelectedNode(null)
   }, [])
 
+  const toggleGap = useCallback((gapIndex: number) => {
+    setCollapsedGaps(prev => {
+      const next = new Set(prev)
+      if (next.has(gapIndex)) next.delete(gapIndex)
+      else next.add(gapIndex)
+      return next
+    })
+  }, [])
+
   // Compute time range for the axis
   const { minTime, maxTime } = useMemo(() => {
     const times = Object.values(graphState.parsedData?.eventTimes ?? {})
     if (times.length === 0) return { minTime: 0, maxTime: 1 }
     return { minTime: Math.min(...times), maxTime: Math.max(...times) }
   }, [graphState.parsedData])
+
+  const hasAnyCollapsed = collapsedGaps.size > 0
 
   return (
     <GraphHighlightContext.Provider value={highlight}>
@@ -144,8 +193,21 @@ export default function PEGraph({ graphState, onReload }: Props) {
             }}
             style={{ background: '#1e1e2e', bottom: 32 }}
           />
-          <TimeAxis minTime={minTime} maxTime={maxTime} />
-          <CursorTimeIndicator mouseX={mouseX} minTime={minTime} maxTime={maxTime} />
+          <TimeAxis
+            minTime={minTime}
+            maxTime={maxTime}
+            segments={segments}
+            gapData={graphState.gapData}
+            collapsedGaps={collapsedGaps}
+            onToggleGap={toggleGap}
+          />
+          <CursorTimeIndicator
+            mouseX={mouseX}
+            minTime={minTime}
+            maxTime={maxTime}
+            compressed={hasAnyCollapsed}
+            segments={segments}
+          />
         </ReactFlow>
 
         {/* Toolbar */}

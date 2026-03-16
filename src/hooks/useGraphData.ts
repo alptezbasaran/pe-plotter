@@ -1,14 +1,19 @@
 import { useState, useCallback } from 'react'
 import type { Node, Edge } from '@xyflow/react'
 import { parseScenarioFile } from '../lib/parser'
-import { computeLayout } from '../lib/layout'
+import { computeLayout, identifyGaps } from '../lib/layout'
 import type { ParsedData } from '../lib/types'
+import type { GapInterval } from '../lib/layout'
 
 export interface GraphState {
   nodes: Node[]
   edges: Edge[]
   parsedData: ParsedData | null
   maxCount: number
+  gapData: {
+    intervals: { t0: number; t1: number; isGap: boolean }[]
+    gaps: GapInterval[]
+  } | null
 }
 
 export function useGraphData() {
@@ -26,6 +31,7 @@ export function useGraphData() {
         const text = e.target?.result as string
         const parsed = parseScenarioFile(text)
         const layoutNodes = computeLayout(parsed)
+        const gapData = identifyGaps(layoutNodes, 0.03)
 
         const maxCount = Math.max(...parsed.edges.map(e => e.count), 1)
 
@@ -70,7 +76,7 @@ export function useGraphData() {
           data: { count, maxCount },
         }))
 
-        setGraphState({ nodes, edges, parsedData: parsed, maxCount })
+        setGraphState({ nodes, edges, parsedData: parsed, maxCount, gapData })
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Parse error')
       } finally {

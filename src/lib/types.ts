@@ -25,3 +25,9 @@ export interface LayoutNode {
   isTerminal: boolean
   time: number
 }
+
+export interface CompressedSegment {
+  t0: number; t1: number   // time range
+  x0: number; x1: number   // canvas x range
+  isGap: boolean
+}
