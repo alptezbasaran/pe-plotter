@@ -28,6 +28,19 @@ jobs:
           node-version: 24
 
       - run: npm install
+
+      - name: Bundle scenario files into public/
+        run: |
+          mkdir -p public
+          for f in *.txt; do [ -f "$f" ] && cp "$f" "public/$f"; done
+          ls public/*.txt 2>/dev/null | sed 's|^public/||' | sort > /tmp/list.txt
+          printf '[\n' > public/files.json
+          first=1; while IFS= read -r name; do
+            [ "$first" = 1 ] && first=0 || printf ',\n' >> public/files.json
+            printf '  "%s"' "$name" >> public/files.json
+          done < /tmp/list.txt
+          printf '\n]\n' >> public/files.json
+
       - run: npm run build
         env:
           VITE_BASE_URL: /pe-plotter/

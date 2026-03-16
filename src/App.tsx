@@ -11,9 +11,11 @@ export default function App() {
   const [availableFiles, setAvailableFiles] = useState<string[]>([])
   const [activeFile, setActiveFile] = useState<string | null>(null)
 
+  const base = import.meta.env.BASE_URL
+
   // Discover available scenario files and auto-load the default
   useEffect(() => {
-    fetch('/files.json')
+    fetch(`${base}files.json`)
       .then(r => { if (r.ok) return r.json() as Promise<string[]>; throw new Error('no manifest') })
       .then(files => {
         setAvailableFiles(files)
@@ -24,7 +26,7 @@ export default function App() {
       })
       .catch(() => {
         // Fallback: try loading single default file (e.g. GitHub Pages)
-        fetch('/Scenario%20info.txt')
+        fetch(`${base}Scenario%20info.txt`)
           .then(r => { if (r.ok) return r.text(); throw new Error('no default') })
           .then(text => {
             const file = new File([text], 'Scenario info.txt', { type: 'text/plain' })
@@ -37,7 +39,7 @@ export default function App() {
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadServerFile = (name: string) => {
-    fetch('/' + encodeURIComponent(name))
+    fetch(`${base}${encodeURIComponent(name)}`)
       .then(r => { if (r.ok) return r.text(); throw new Error('fetch failed') })
       .then(text => {
         const file = new File([text], name, { type: 'text/plain' })
