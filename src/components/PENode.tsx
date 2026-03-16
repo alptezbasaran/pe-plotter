@@ -1,0 +1,111 @@
+import { memo } from 'react'
+import { Handle, Position } from '@xyflow/react'
+import type { NodeProps } from '@xyflow/react'
+import { useHighlight } from '../lib/GraphHighlightContext'
+
+interface PENodeData {
+  label: string
+  isTerminal: boolean
+  time: number
+  details: string[]
+  outDegree: number
+  traversalCount: number
+  maxTraversalCount: number
+  [key: string]: unknown
+}
+
+function PENode({ id, data }: NodeProps) {
+  const d = data as PENodeData
+  const { selectedId, ancestorNodeIds, descendantNodeIds, highlightedNodeIds } = useHighlight()
+
+  const isSelected = selectedId === id
+  const isDimmed = !!selectedId && !highlightedNodeIds.has(id)
+  const isAncestor = !isSelected && ancestorNodeIds.has(id)
+  const isDescendant = !isSelected && descendantNodeIds.has(id)
+  const isBranch = !isSelected && !isAncestor && !isDescendant && d.outDegree > 1
+
+  let bg: string
+  let color: string
+  let border: string
+  let boxShadow: string | undefined
+  let opacity: number
+
+  if (isDimmed) {
+    bg = '#1e1e2e'
+    color = '#45475a'
+    border = '1px solid #313244'
+    opacity = 0.15
+  } else if (isSelected) {
+    bg = '#f8fafc'
+    color = '#1e1e2e'
+    border = '3px solid #f59e0b'
+    boxShadow = '0 0 0 4px rgba(245,158,11,0.4)'
+    opacity = 1
+  } else if (isAncestor) {
+    bg = '#f59e0b'
+    color = '#1c1917'
+    border = '1px solid rgba(0,0,0,0.2)'
+    opacity = 1
+  } else if (isDescendant) {
+    bg = '#34d399'
+    color = '#064e3b'
+    border = '1px solid rgba(0,0,0,0.2)'
+    opacity = 1
+  } else if (isBranch) {
+    bg = '#7c3aed'
+    color = '#fff'
+    border = '1px solid rgba(0,0,0,0.3)'
+    opacity = 1
+  } else {
+    bg = d.isTerminal ? '#f43f5e' : '#0ea5e9'
+    color = '#fff'
+    border = '1px solid rgba(0,0,0,0.3)'
+    opacity = 1
+  }
+
+  const showTime = isSelected || isAncestor || isDescendant
+
+  const isHighlighted = isSelected || isAncestor || isDescendant
+  const t = isHighlighted ? 0 : Math.sqrt((d.traversalCount ?? 1) / (d.maxTraversalCount ?? 1))
+  const padV  = isHighlighted ? 4 : 2 + Math.round(t * 6)
+  const padH  = isHighlighted ? 8 : 5 + Math.round(t * 7)
+  const fSize = isHighlighted ? 11 : 8 + Math.round(t * 5)
+
+  return (
+    <>
+      <Handle type="target" position={Position.Left} style={{ opacity: 0 }} />
+      <div
+        style={{
+          background: bg,
+          border,
+          borderRadius: 4,
+          padding: `${padV}px ${padH}px`,
+          color,
+          fontSize: fSize,
+          fontWeight: 600,
+          whiteSpace: 'nowrap',
+          cursor: 'pointer',
+          opacity,
+          transition: 'opacity 0.15s, background 0.15s',
+          boxShadow,
+          textAlign: 'center',
+        }}
+      >
+        {d.label}
+        {(d.traversalCount ?? 1) > 1 && (
+          <div style={{ fontSize: 7, fontWeight: 400, opacity: 0.55, marginTop: 1 }}>
+            {d.traversalCount}×
+          </div>
+        )}
+        {showTime && (
+          <div style={{ fontSize: 8, fontWeight: 400, opacity: 0.7, marginTop: 1 }}>
+            t={d.time.toFixed(1)} s
+          </div>
+        )}
+      </div>
+      <Handle type="source" position={Position.Right} style={{ opacity: 0 }} />
+    </>
+  )
+}
+
+export default memo(PENode)
