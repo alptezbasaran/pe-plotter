@@ -12,12 +12,22 @@ docker build -t pe-plotter . && docker run -p 8080:80 pe-plotter
 
 Then open `http://localhost:8080`. The default `Scenario info.txt` is bundled into the image automatically.
 
+Route map:
+- `/` -> landing page to choose visualization experience
+- `/app` -> React DAG application
+- `/visualization.html` -> optimization speedup chart (D3)
+
 For local development:
 
 ```bash
 npm install
 npm run dev
 ```
+
+Local route map:
+- `/` -> landing page
+- `/app` -> React DAG application
+- `/visualization.html` -> optimization speedup chart (D3)
 
 ## Running the legacy Python script
 
@@ -39,6 +49,12 @@ The script expects `Scenario info.txt` to be present in the working directory.
 ## Web app architecture
 
 The React + TypeScript app (Vite, React Flow) reads nuclear plant simulator output and renders an interactive DAG showing how operator scenarios flow through Pivotal Events (PEs).
+
+Top-level navigation:
+- `src/main.tsx` uses client-side routing.
+- `src/pages/LandingPage.tsx` is the entry (`/`) and links to both experiences.
+- `src/App.tsx` is mounted at `/app`.
+- `visualization.html` is the optimization speedup chart, served directly at `/visualization.html`.
 
 ### Data flow
 

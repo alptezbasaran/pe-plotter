@@ -33,12 +33,22 @@ docker build -t pe-plotter . && docker run -p 8080:80 pe-plotter
 
 Open `http://localhost:8080`. The default `Scenario info.txt` is bundled into the image.
 
+From the landing page:
+- `http://localhost:8080/` -> landing page
+- `http://localhost:8080/app` -> React DAG app
+- `http://localhost:8080/visualization.html` -> optimization speedup chart (D3)
+
 ### Local development
 
 ```bash
 npm install
 npm run dev
 ```
+
+From local dev server:
+- `http://localhost:5173/` -> landing page
+- `http://localhost:5173/app` -> React DAG app
+- `http://localhost:5173/visualization.html` -> optimization speedup chart (D3)
 
 ### Legacy Python script
 
@@ -79,3 +89,7 @@ Scenario info.txt
 ## Deployment
 
 Pushes to `main` automatically deploy to GitHub Pages via `.github/workflows/deploy.yml`.
+On GitHub Pages (`/pe-plotter/` base path), routes are:
+- `/pe-plotter/` -> landing page
+- `/pe-plotter/app` -> React DAG app
+- `/pe-plotter/visualization.html` -> optimization speedup chart (D3)
